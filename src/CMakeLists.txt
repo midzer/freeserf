@@ -1,17 +1,48 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
+set(SDL2_INCLUDE_DIRS "${EMSCRIPTEN_SYSROOT}/include/SDL2")
+set(SDL2_LIBRARIES "-sUSE_SDL=2")
+
+if(NOT TARGET SDL2::SDL2)
+  add_library(SDL2::SDL2 INTERFACE IMPORTED)
+  set_target_properties(SDL2::SDL2 PROPERTIES
+    INTERFACE_COMPILE_OPTIONS "-sUSE_SDL=2"
+    INTERFACE_LINK_LIBRARIES "-sUSE_SDL=2")
+
+  add_library(SDL2::SDL2main INTERFACE IMPORTED)
+endif()
+
+set(SDL2_INCLUDE_DIRS "${EMSCRIPTEN_SYSROOT}/include/SDL2")
+set(SDL2_IMAGE_LIBRARIES "-sUSE_SDL_IMAGE=2")
+
+if(NOT TARGET SDL2_image::SDL2_image)
+  add_library(SDL2_image::SDL2_image INTERFACE IMPORTED)
+  set_target_properties(SDL2_image::SDL2_image PROPERTIES
+    INTERFACE_COMPILE_OPTIONS "-sUSE_SDL_IMAGE=2"
+    INTERFACE_LINK_LIBRARIES "-sUSE_SDL_IMAGE=2")
+
+  add_library(SDL2_image::SDL2main_image INTERFACE IMPORTED)
+endif()
+
+set(SDL2_INCLUDE_DIRS "${EMSCRIPTEN_SYSROOT}/include/SDL2")
+set(SDL2_MIXER_LIBRARIES "-sUSE_SDL_MIXER=2")
+
+if(NOT TARGET SDL2_mixer::SDL2_mixer)
+  add_library(SDL2_mixer::SDL2_mixer INTERFACE IMPORTED)
+  set_target_properties(SDL2_mixer::SDL2_mixer PROPERTIES
+    INTERFACE_COMPILE_OPTIONS "-sUSE_SDL_MIXER=2"
+    INTERFACE_LINK_LIBRARIES "-sUSE_SDL_MIXER=2")
+
+  add_library(SDL2_mixer::SDL2main_mixer INTERFACE IMPORTED)
+endif()
+
 option(ENABLE_SDL2_MIXER "Enable audio support using SDL2_mixer" ON)
 option(ENABLE_SDL2_IMAGE "Enable image loading using SDL2_image" ON)
 
-find_package(SDL2 REQUIRED)
-if(SDL2_DIR)
-  if(ENABLE_SDL2_MIXER)
-    find_package(SDL2_mixer)
-  endif()
-  if(ENABLE_SDL2_IMAGE)
-    find_package(SDL2_image)
-  endif()
-endif()
+find_package(SDL2)
+find_package(SDL2_mixer)
+find_package(SDL2_image)
+
 
 if(WIN32)
   add_definitions(/D_CRT_SECURE_NO_WARNINGS /D_SCL_SECURE_NO_WARNINGS)
@@ -82,7 +113,7 @@ if(SDL2_DIR)
   list(APPEND PLATFORM_HEADERS video-sdl.h event_loop-sdl.h)
 endif()
 
-if(ENABLE_SDL2_MIXER AND SDL2_mixer_DIR)
+if(ENABLE_SDL2_MIXER)
   list(APPEND PLATFORM_SOURCES audio-sdlmixer.cc)
   list(APPEND PLATFORM_HEADERS audio-sdlmixer.h)
 else()
@@ -92,7 +123,7 @@ endif()
 
 add_library(platform STATIC ${PLATFORM_SOURCES} ${PLATFORM_HEADERS})
 target_link_libraries(platform SDL2::SDL2)
-if(ENABLE_SDL2_MIXER AND SDL2_mixer_DIR)
+if(ENABLE_SDL2_MIXER)
   target_link_libraries(platform SDL2_mixer::SDL2_mixer)
 endif()
 target_check_style(platform)
@@ -122,14 +153,14 @@ set(DATA_HEADERS data.h
                  data-source.h
                  sprite-file.h)
 
-if(ENABLE_SDL2_IMAGE AND SDL2_image_DIR)
+if(ENABLE_SDL2_IMAGE)
   list(APPEND DATA_SOURCES sprite-file-sdl.cc)
 else()
   list(APPEND DATA_SOURCES sprite-file-dummy.cc)
 endif()
 
 add_library(data STATIC ${DATA_SOURCES} ${DATA_HEADERS})
-if(ENABLE_SDL2_IMAGE AND SDL2_image_DIR)
+if(ENABLE_SDL2_IMAGE)
   target_link_libraries(data SDL2::SDL2 SDL2_image::SDL2_image)
 endif()
 target_check_style(data)

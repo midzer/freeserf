@@ -162,7 +162,7 @@ Data::get_standard_search_paths() const {
   };
 
   // Look in current directory
-  paths.push_back(".");
+  paths.push_back("data");
 
   // Look in data directories under the home directory
   add_env_path(std::getenv("XDG_DATA_HOME"), "freeserf");
