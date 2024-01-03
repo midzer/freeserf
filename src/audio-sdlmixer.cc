@@ -70,20 +70,20 @@ AudioSDL::AudioSDL() {
                                << static_cast<int>(mversion->minor) << '.'
                                << static_cast<int>(mversion->patch);
 
-  int r = Mix_Init(0);
+  /*int r = Mix_Init(MIX_INIT_MOD | MIX_INIT_MID);
   if (r != 0) {
     throw ExceptionSDLmixer("Could not init SDL_mixer");
-  }
+  }*/
 
-  r = Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 512);
+  int r = Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, AUDIO_F32SYS, MIX_DEFAULT_CHANNELS, 4096);
   if (r < 0) {
     throw ExceptionSDLmixer("Could not open audio device");
   }
 
-  r = Mix_AllocateChannels(128);
+  /*r = Mix_AllocateChannels(128);
   if (r != 128) {
     throw ExceptionSDLmixer("Failed to allocate channels");
-  }
+  }*/
 
   volume = 1.f;
 

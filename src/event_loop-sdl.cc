@@ -45,22 +45,22 @@ EventLoopSDL::EventLoopSDL()
   : zoom_factor(1.f)
   , screen_factor_x(1.f)
   , screen_factor_y(1.f) {
-  SDL_InitSubSystem(SDL_INIT_EVENTS | SDL_INIT_TIMER);
+  /*SDL_InitSubSystem(SDL_INIT_AUDIO);
 
   eventUserTypeStep = SDL_RegisterEvents(2);
   if (eventUserTypeStep == (Uint32)-1) {
     throw ExceptionFreeserf("Failed to register SDL event");
   }
-  eventUserTypeStep++;
+  eventUserTypeStep++;*/
 }
 
 Uint32
 EventLoopSDL::timer_callback(Uint32 interval, void *param) {
   EventLoopSDL *eventLoop = static_cast<EventLoopSDL*>(param);
   SDL_Event event;
-  event.type = eventLoop->eventUserTypeStep;
-  event.user.type = eventLoop->eventUserTypeStep;
-  event.user.code = 0;
+  event.type = SDL_USEREVENT;
+  event.user.type = SDL_USEREVENT;
+  event.user.code = EventUserTypeStep;
   event.user.data1 = 0;
   event.user.data2 = 0;
   SDL_PushEvent(&event);
@@ -94,10 +94,10 @@ EventLoopSDL::deferred_call(DeferredCall call, void *data) {
 // The code for one iteration of the original game_loop is in game_loop_iter.
 void
 EventLoopSDL::run() {
-  SDL_TimerID timer_id = SDL_AddTimer(TICK_LENGTH, timer_callback, this);
+  /*SDL_TimerID timer_id = SDL_AddTimer(TICK_LENGTH, timer_callback, this);
   if (timer_id == 0) {
     return;
-  }
+  }*/
 
   int drag_button = 0;
   int drag_x = 0;
@@ -113,9 +113,18 @@ EventLoopSDL::run() {
   Frame *screen = nullptr;
   gfx.get_screen_factor(&screen_factor_x, &screen_factor_y);
 
-  while (SDL_WaitEvent(&event)) {
-    unsigned int current_ticks = SDL_GetTicks();
-
+  // Timing variables
+  const int FPS = 50;
+  const int frameDelay = 1000 / FPS;
+  Uint32 frameStart;
+  int frameTime;
+  //unsigned int current_ticks = SDL_GetTicks();
+  //unsigned int b = SDL_GetTicks();
+  //double delta = 0;
+  while (true) {
+    frameStart = SDL_GetTicks();
+	while (SDL_PollEvent(&event)) {
+    //SDL_PollEvent(&event);
     switch (event.type) {
       case SDL_MOUSEBUTTONUP:
         if (drag_button == event.button.button) {
@@ -129,7 +138,7 @@ EventLoopSDL::run() {
                                    zoom_factor * screen_factor_y);
           notify_click(x, y, (Event::Button)event.button.button);
 
-          if (current_ticks - last_click[event.button.button] <
+          if (frameStart - last_click[event.button.button] <
                 MOUSE_TIME_SENSITIVITY &&
               event.button.x >= (last_click_x - MOUSE_MOVE_SENSITIVITY) &&
               event.button.x <= (last_click_x + MOUSE_MOVE_SENSITIVITY) &&
@@ -138,7 +147,7 @@ EventLoopSDL::run() {
             notify_dbl_click(x, y, (Event::Button)event.button.button);
           }
 
-          last_click[event.button.button] = current_ticks;
+          last_click[event.button.button] = frameStart;
           last_click_x = event.button.x;
           last_click_y = event.button.y;
         }
@@ -274,7 +283,7 @@ EventLoopSDL::run() {
       case SDL_USEREVENT:
         switch (event.user.code) {
           case EventUserTypeQuit:
-            SDL_RemoveTimer(timer_id);
+            //SDL_RemoveTimer(timer_id);
             if (screen != nullptr) {
               delete screen;
               screen = nullptr;
@@ -287,29 +296,43 @@ EventLoopSDL::run() {
             }
             break;
           }
-          default:
+          case EventUserTypeStep:
+            // Update and draw interface
+            //notify_update();
+
+            //SDL_FlushEvent(eventUserTypeStep);
             break;
         }
         break;
-      default:
-        if (event.type == eventUserTypeStep) {
-          // Update and draw interface
-          notify_update();
-
-          if (screen == nullptr) {
-            screen = gfx.get_screen_frame();
-          }
-          notify_draw(screen);
-
-          // Swap video buffers
-          gfx.swap_buffers();
-
-          SDL_FlushEvent(eventUserTypeStep);
-        }
     }
   }
+  //current_ticks = SDL_GetTicks();
+  //delta = current_ticks - b;
+  //if (delta > 1000/50.0 /*&& event.type == eventUserTypeStep*/) {
+    //b = current_ticks;
 
-  SDL_RemoveTimer(timer_id);
+    notify_update();
+
+    if (screen == nullptr) {
+      screen = gfx.get_screen_frame();
+    }
+    notify_draw(screen);
+
+    // This measures how long this iteration of the loop took
+    frameTime = SDL_GetTicks() - frameStart;
+
+    // This keeps us from displaying more frames than 60/Second
+    if(frameDelay > frameTime)
+    {
+        SDL_Delay(frameDelay - frameTime - 4); // subtract draw margin for swap
+    }
+
+    // Swap video buffers
+    gfx.swap_buffers();
+  //}
+  }
+
+  //SDL_RemoveTimer(timer_id);
   if (screen != nullptr) {
     delete screen;
     screen = nullptr;

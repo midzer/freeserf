@@ -15,6 +15,7 @@ git_make_version(FREESERF_VERSION ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_VERSION}
 message(STATUS "FREESERF_VERSION = ${FREESERF_VERSION}")
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -O3 -sUSE_SDL=2")
 
 include_directories(${INCLUDE_DIRECTORIES} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -30,7 +31,7 @@ enable_check_style()
 
 add_subdirectory(src)
 
-option(ENABLE_TESTS "Enable compilation of tests" ON)
+option(ENABLE_TESTS "Enable compilation of tests" OFF)
 if(ENABLE_TESTS)
   enable_testing()
   add_subdirectory(tests)

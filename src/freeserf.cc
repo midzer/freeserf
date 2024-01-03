@@ -37,8 +37,17 @@
 # include <SDL.h>
 #endif  // WIN32
 
+#include <emscripten.h>
+
+EventLoop &event_loop = EventLoop::get_instance();
+
+void main_loop() {
+  event_loop.run();
+}
+
 int
 main(int argc, char *argv[]) {
+  emscripten_set_main_loop(main_loop, 50, 0);
   std::string data_dir;
   std::string save_file;
 
@@ -131,7 +140,6 @@ main(int argc, char *argv[]) {
   }
 
   /* Init game loop */
-  EventLoop &event_loop = EventLoop::get_instance();
   event_loop.add_handler(&interface);
 
   /* Start game loop */
