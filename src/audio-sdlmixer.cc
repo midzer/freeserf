@@ -75,7 +75,7 @@ AudioSDL::AudioSDL() {
     throw ExceptionSDLmixer("Could not init SDL_mixer");
   }*/
 
-  int r = Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, AUDIO_F32SYS, MIX_DEFAULT_CHANNELS, 4096);
+  int r = Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, AUDIO_S16SYS, MIX_DEFAULT_CHANNELS, 2048);
   if (r < 0) {
     throw ExceptionSDLmixer("Could not open audio device");
   }
